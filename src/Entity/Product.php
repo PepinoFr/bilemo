@@ -16,28 +16,41 @@ class Product
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
      * @Groups("product:all")
+     * @Groups("product:id")
      */
     private $id;
 
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
      * @Groups("product:all")
+     * @Groups("product:id")
      */
     private $name;
+    /**
+     * @Groups("product:all")
+     *
+     */
+    private $link;
 
     /**
      * @ORM\Column(type="float", nullable=true)
+     * @Groups("product:id")
      */
     private $price;
 
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
+     * @Groups("product:id")
      */
     private $description;
 
     public function getId(): ?int
     {
         return $this->id;
+    }
+    public function getLink(): ?string
+    {
+        return "/api/product/".$this->id;
     }
 
     public function getName(): ?string

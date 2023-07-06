@@ -61,7 +61,7 @@ class ApiProductController extends AbstractController
                 $item->expiresAfter(3600);
                 return $productRepository->getProductById($id);
             });
-            return $this->json($product,200,[]);
+            return $this->json($product,200,[],['groups' => 'product:id']);
         }  catch (Exception $exception) {
             return $this->json($exception->getMessage(),$exception->getCode());
         }

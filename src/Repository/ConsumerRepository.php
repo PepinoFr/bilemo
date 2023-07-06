@@ -35,7 +35,6 @@ class ConsumerRepository extends ServiceEntityRepository
     public function remove(Consumer $entity, bool $flush = false): void
     {
         $this->getEntityManager()->remove($entity);
-
         if ($flush) {
             $this->getEntityManager()->flush();
         }

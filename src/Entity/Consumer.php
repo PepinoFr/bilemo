@@ -26,6 +26,7 @@ class Consumer
 
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
+     * @var string|NULL
      * @Groups("consumer:all")
      * @Groups("consumer:read")
      * @Groups("consumer:add")
@@ -39,6 +40,7 @@ class Consumer
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
      * @Groups("consumer:read")
+     * @var string|NULL
      * @Groups("consumer:add")
      * @OA\Property(type="string")
      * @Assert\NotBlank
@@ -46,6 +48,14 @@ class Consumer
      * @Groups({"write"})
      */
     private $firstname;
+    /**
+     * @Groups("consumer:all")
+     * @var string|NULL
+     * @OA\Property(type="string")
+     * @Assert\NotBlank
+     * @SerializedName("link")
+     */
+    private $link;
 
     /**
      * @ORM\ManyToOne(targetEntity=User::class, inversedBy="consumers")
@@ -58,6 +68,10 @@ class Consumer
         return $this->id;
     }
 
+    public function getLink(): ?string
+    {
+        return "/api/consumer/".$this->id;
+    }
     public function getName(): ?string
     {
         return $this->name;

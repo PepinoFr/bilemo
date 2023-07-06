@@ -22,6 +22,7 @@ use Symfony\Component\HttpKernel\Attribute\Cache;
 use \OpenApi\Annotations\JsonContent;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
+use Symfony\Contracts\Cache\TagAwareCacheInterface;
 
 class ApiConsumerController extends AbstractController
 {
@@ -37,13 +38,14 @@ class ApiConsumerController extends AbstractController
         )
     )]
     #[Security(name: 'Bearer')]
-    public function getAllConsumer(ConsumerRepository $consumerRepository,CacheInterface $cache,Request $request)
+    public function getAllConsumer(ConsumerRepository $consumerRepository,TagAwareCacheInterface $cache,Request $request)
     {
         $page = $request->get('page',1);
         $limit = $request->get('limit',3);
 
         $resulatUser = $cache->get('user-'.str_replace( array( '%', '@', '\'', ';', '<', '>' ), ' ', $this->getUser()->getUserIdentifier()).$page."&".$limit,function (ItemInterface $item) use ($limit, $page, $consumerRepository) {
             $item->expiresAfter(3600);
+            $item->tag("consumerCache");
             return $consumerRepository->findAllWithPagination($this->getUser()->getId(),$page,$limit);
         });
         return $this->json($resulatUser,200,[],['groups' => 'consumer:all']);
@@ -62,7 +64,7 @@ class ApiConsumerController extends AbstractController
     )]
     #[Security(name: 'Bearer')]
 
-    public function getConsumer($id,ConsumerRepository $consumerRepository,CacheInterface $cache)
+    public function getConsumer($id,ConsumerRepository $consumerRepository,TagAwareCacheInterface  $cache)
     {
         try {
             $consumer = $cache->get('id-'.$id,function (ItemInterface $item) use ($id, $consumerRepository) {
@@ -94,7 +96,7 @@ class ApiConsumerController extends AbstractController
     )]
 
     #[Security(name: 'Bearer')]
-    public function store(Request $request,SerializerInterface $serializer,EntityManagerInterface $manager,CacheInterface $cache){
+    public function store(Request $request,SerializerInterface $serializer,EntityManagerInterface $manager,TagAwareCacheInterface $cache){
         $jsonRecu = $request->getContent();
 
         $consumer = $serializer->deserialize($jsonRecu,Consumer::class,'json');
@@ -103,7 +105,7 @@ class ApiConsumerController extends AbstractController
 
         $consumer->setClient($user);
 
-        $cache->delete('user-'.str_replace( array( '%', '@', '\'', ';', '<', '>' ), ' ', $user->getUserIdentifier()));
+        $cache->invalidateTags(["consumerCache"]);
 
         $manager->persist($consumer);
         $manager->flush();
@@ -123,14 +125,14 @@ class ApiConsumerController extends AbstractController
     )]
 
     #[Security(name: 'Bearer')]
-    public function delConsumer($id,ConsumerRepository $consumerRepository,EntityManagerInterface $manager,CacheInterface $cache)
+    public function delConsumer($id,ConsumerRepository $consumerRepository,EntityManagerInterface $manager,TagAwareCacheInterface  $cache)
     {
 
         try {
             $consumer = $consumerRepository->getConsumerById($id);
             $manager->remove($consumer);
             $manager->flush();
-            $cache->delete('user-'.str_replace( array( '%', '@', '\'', ';', '<', '>' ), ' ', $this->getUser()->getUserIdentifier()));
+            $cache->invalidateTags(["consumerCache"]);
             return $this->json("delete",204,[]) ;
         } catch (Exception $exception) {
             return $this->json($exception->getMessage(),$exception->getCode());
