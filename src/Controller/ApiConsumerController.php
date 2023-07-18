@@ -80,6 +80,12 @@ class ApiConsumerController extends AbstractController
 
     /**
      * @Route("/api/consumer",name="app_api_addconsumer",methods={"POST"})
+     * @param Request $request
+     * @param SerializerInterface $serializer
+     * @param EntityManagerInterface $manager
+     * @param TagAwareCacheInterface $cache
+     * @param $consumerRepository
+     * @return JsonResponse
      */
     #[OA\RequestBody(
         request: 'Consumer',
@@ -96,21 +102,25 @@ class ApiConsumerController extends AbstractController
     )]
 
     #[Security(name: 'Bearer')]
-    public function store(Request $request,SerializerInterface $serializer,EntityManagerInterface $manager,TagAwareCacheInterface $cache){
-        $jsonRecu = $request->getContent();
+    public function store(Request $request, SerializerInterface $serializer, EntityManagerInterface $manager, TagAwareCacheInterface $cache,ConsumerRepository $consumerRepository){
+        try {
+            $jsonRecu = $request->getContent();
 
-        $consumer = $serializer->deserialize($jsonRecu,Consumer::class,'json');
+            $consumer = $serializer->deserialize($jsonRecu, Consumer::class, 'json');
 
-        $user = $this->getUser();;
+            $user = $this->getUser();;
 
-        $consumer->setClient($user);
+            $consumer->setClient($user);
 
-        $cache->invalidateTags(["consumerCache"]);
+            $consumerRepository->checkValidation($consumer);
+            $cache->invalidateTags(["consumerCache"]);
+            $manager->persist($consumer);
+            $manager->flush();
 
-        $manager->persist($consumer);
-        $manager->flush();
-
-        return $this->json($consumer,201,[],['groups'=>'consumer:read']);
+            return $this->json($consumer, 201, [], ['groups' => 'consumer:read']);
+        } catch (Exception $exception) {
+            return $this->json($exception->getMessage(),$exception->getCode());
+        }
     }
     /**
      * @Route("/api/consumer/delete/{id}", name="app_api_del_consumer",methods={"DELETE"})
