@@ -55,6 +55,15 @@ class ConsumerRepository extends ServiceEntityRepository
         return $qb->getQuery()->getResult();
     }
 
+    public function checkValidation(Consumer $consumer) {
+        if (empty( $consumer->getName() )) {
+            throw new Exception("name not found",404);
+        }
+        if (empty( $consumer->getFirstname() )) {
+            throw new Exception("first name not found",400 );
+        }
+    }
+
 //    /**
 //     * @return Consumer[] Returns an array of Consumer objects
 //     */
