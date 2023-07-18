@@ -113,7 +113,7 @@ class ApiConsumerController extends AbstractController
         return $this->json($consumer,201,[],['groups'=>'consumer:read']);
     }
     /**
-     * @Route("/api/consumer/delete/{id}", name="app_api_del_consumer",methods={"GET"})
+     * @Route("/api/consumer/delete/{id}", name="app_api_del_consumer",methods={"DELETE"})
      */
     #[OA\Response(
         response: 204,
